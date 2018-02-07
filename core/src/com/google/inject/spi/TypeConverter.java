@@ -26,6 +26,8 @@ import com.google.inject.TypeLiteral;
  */
 public interface TypeConverter {
 
-  /** Converts a string value. Throws an exception if a conversion error occurs. */
+  /**
+   * Converts a string value. Throws an exception if a conversion error occurs.
+   */
   Object convert(String value, TypeLiteral<?> toType);
 }

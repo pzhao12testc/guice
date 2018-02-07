@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2008 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,7 +34,6 @@ final class ExposedKeyFactory<T> implements InternalFactory<T>, CreationListener
     this.privateElements = privateElements;
   }
 
-  @Override
   public void notify(Errors errors) {
     InjectorImpl privateInjector = (InjectorImpl) privateElements.getInjector();
     BindingImpl<T> explicitBinding = privateInjector.state.getExplicitBinding(key);
@@ -50,10 +49,8 @@ final class ExposedKeyFactory<T> implements InternalFactory<T>, CreationListener
     this.delegate = explicitBinding;
   }
 
-  @Override
-  public T get(InternalContext context, Dependency<?> dependency, boolean linked)
-      throws InternalProvisionException {
-    // TODO(lukes): add a source to the thrown exception?
-    return delegate.getInternalFactory().get(context, dependency, linked);
+  public T get(Errors errors, InternalContext context, Dependency<?> dependency, boolean linked)
+      throws ErrorsException {
+    return delegate.getInternalFactory().get(errors, context, dependency, linked);
   }
 }

@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2014 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,11 +24,14 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.matcher.Matchers;
+
+import junit.framework.TestCase;
+
+import org.aopalliance.intercept.MethodInterceptor;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.concurrent.atomic.AtomicInteger;
-import junit.framework.TestCase;
-import org.aopalliance.intercept.MethodInterceptor;
 
 /**
  * Tests for interception of default methods.
@@ -41,11 +44,10 @@ public class DefaultMethodInterceptionTest extends TestCase {
   private static final AtomicInteger interceptedCallCount = new AtomicInteger(0);
 
   // the interceptor's a lambda too
-  private final MethodInterceptor interceptor =
-      invocation -> {
-        interceptedCallCount.incrementAndGet();
-        return invocation.proceed();
-      };
+  private final MethodInterceptor interceptor = invocation -> {
+    interceptedCallCount.incrementAndGet();
+    return invocation.proceed();
+  };
 
   @Override
   protected void setUp() throws Exception {
@@ -74,16 +76,14 @@ public class DefaultMethodInterceptionTest extends TestCase {
   }
 
   public void testInterceptedDefaultMethod() {
-    Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                bindInterceptor(
-                    Matchers.any(), Matchers.annotatedWith(InterceptMe.class), interceptor);
-                bind(Foo.class).to(NonOverridingFoo.class);
-              }
-            });
+    Injector injector = Guice.createInjector(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bindInterceptor(Matchers.any(), Matchers.annotatedWith(InterceptMe.class),
+            interceptor);
+        bind(Foo.class).to(NonOverridingFoo.class);
+      }
+    });
 
     Foo foo = injector.getInstance(Foo.class);
     assertEquals("Foo", foo.defaultMethod());
@@ -92,15 +92,13 @@ public class DefaultMethodInterceptionTest extends TestCase {
   }
 
   public void testInterceptedDefaultMethod_calledByAnotherMethod() {
-    Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                bindInterceptor(
-                    Matchers.any(), Matchers.annotatedWith(InterceptMe.class), interceptor);
-              }
-            });
+    Injector injector = Guice.createInjector(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bindInterceptor(Matchers.any(), Matchers.annotatedWith(InterceptMe.class),
+            interceptor);
+      }
+    });
 
     NonOverridingFoo foo = injector.getInstance(NonOverridingFoo.class);
     assertEquals("NonOverriding-Foo", foo.methodCallingDefault());
@@ -118,19 +116,18 @@ public class DefaultMethodInterceptionTest extends TestCase {
   }
 
   /** Foo implementation that should use superclass method rather than default method. */
-  public static class InheritingFoo extends BaseClass implements Foo {}
+  public static class InheritingFoo extends BaseClass implements Foo {
+  }
 
   public void testInterceptedDefaultMethod_whenParentClassDefinesNonInterceptedMethod() {
-    Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                bindInterceptor(
-                    Matchers.any(), Matchers.annotatedWith(InterceptMe.class), interceptor);
-                bind(Foo.class).to(InheritingFoo.class);
-              }
-            });
+    Injector injector = Guice.createInjector(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bindInterceptor(Matchers.any(), Matchers.annotatedWith(InterceptMe.class),
+            interceptor);
+        bind(Foo.class).to(InheritingFoo.class);
+      }
+    });
 
     // the concrete implementation that wins is not annotated
     Foo foo = injector.getInstance(Foo.class);
@@ -154,19 +151,18 @@ public class DefaultMethodInterceptionTest extends TestCase {
   /**
    * Foo implementation that should use intercepted superclass method rather than default method.
    */
-  public static class InheritingFoo2 extends BaseClass2 implements Foo {}
+  public static class InheritingFoo2 extends BaseClass2 implements Foo {
+  }
 
   public void testInterceptedDefaultMethod_whenParentClassDefinesInterceptedMethod() {
-    Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                bindInterceptor(
-                    Matchers.any(), Matchers.annotatedWith(InterceptMe.class), interceptor);
-                bind(Foo.class).to(InheritingFoo2.class);
-              }
-            });
+    Injector injector = Guice.createInjector(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bindInterceptor(Matchers.any(), Matchers.annotatedWith(InterceptMe.class),
+            interceptor);
+        bind(Foo.class).to(InheritingFoo2.class);
+      }
+    });
 
     // the concrete implementation that wins is not annotated
     Foo foo = injector.getInstance(Foo.class);
@@ -192,15 +188,13 @@ public class DefaultMethodInterceptionTest extends TestCase {
   }
 
   public void testInterception_ofAllMethodsOnType() {
-    Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                bindInterceptor(Matchers.subclassesOf(Baz.class), Matchers.any(), interceptor);
-                bind(Baz.class).to(BazImpl.class);
-              }
-            });
+    Injector injector = Guice.createInjector(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bindInterceptor(Matchers.subclassesOf(Baz.class), Matchers.any(), interceptor);
+        bind(Baz.class).to(BazImpl.class);
+      }
+    });
 
     Baz baz = injector.getInstance(Baz.class);
 
@@ -211,15 +205,13 @@ public class DefaultMethodInterceptionTest extends TestCase {
   }
 
   public void testInterception_ofAllMethodsOnType_interceptsInheritedDefaultMethod() {
-    Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                bindInterceptor(Matchers.subclassesOf(BazImpl.class), Matchers.any(), interceptor);
-                bind(Baz.class).to(BazImpl.class);
-              }
-            });
+    Injector injector = Guice.createInjector(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bindInterceptor(Matchers.subclassesOf(BazImpl.class), Matchers.any(), interceptor);
+        bind(Baz.class).to(BazImpl.class);
+      }
+    });
 
     Baz baz = injector.getInstance(Baz.class);
 

@@ -14,5 +14,7 @@
  * limitations under the License.
  */
 
-/** Spring integration; this extension requires {@code guice-spring.jar}. */
+/**
+ * Spring integration; this extension requires {@code guice-spring.jar}.
+ */
 package com.google.inject.spring;

@@ -23,12 +23,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * Annotation used by {@link BoundFieldModule} to indicate that a field should be bound to its value
- * using Guice.
- *
- * <p>Binding to {@code null} is only allowed for fields that are annotated {@code @Nullable}. See
- * <a
- * href="https://github.com/google/guice/wiki/UseNullable">https://github.com/google/guice/wiki/UseNullable</a>
+ * Annotation used by {@link BoundFieldModule} to indicate that a field should be bound to its
+ * value using Guice.
  *
  * @see BoundFieldModule
  * @author eatnumber1@google.com (Russ Harmon)
@@ -43,11 +39,10 @@ public @interface Bind {
   Class<?> to() default Bind.class;
 
   /**
-   * If true, {@link BoundFieldModule} will delay reading the field until injection time rather than
-   * eagerly reading it at configure time.
-   *
-   * <p>When used with Provider valued fields, the provider will be read from the field and {@code
-   * .get()} will be called for each provision. This may be useful for testing provision failures.
+   * If true, {@link BoundFieldModule} will delay retrieving the field's value until injection time
+   * rather than eagerly fetching it at configure time.
+   * 
+   * <p>This option is not supported with Provider valued fields.
    */
   boolean lazy() default false;
 }

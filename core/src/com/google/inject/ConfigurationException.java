@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2008 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,8 +18,10 @@ package com.google.inject;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.inject.internal.Messages;
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.internal.Errors;
 import com.google.inject.spi.Message;
+
 import java.util.Collection;
 
 /**
@@ -31,13 +33,13 @@ import java.util.Collection;
  */
 public final class ConfigurationException extends RuntimeException {
 
-  private final com.google.common.collect.ImmutableSet<Message> messages;
+  private final ImmutableSet<Message> messages;
   private Object partialValue = null;
 
   /** Creates a ConfigurationException containing {@code messages}. */
   public ConfigurationException(Iterable<Message> messages) {
-    this.messages = com.google.common.collect.ImmutableSet.copyOf(messages);
-    initCause(Messages.getOnlyCause(this.messages));
+    this.messages = ImmutableSet.copyOf(messages); 
+    initCause(Errors.getOnlyCause(this.messages));
   }
 
   /** Returns a copy of this configuration exception with the specified partial value. */
@@ -55,22 +57,19 @@ public final class ConfigurationException extends RuntimeException {
   }
 
   /**
-   * Returns a value that was only partially computed due to this exception. The caller can use this
-   * while collecting additional configuration problems.
+   * Returns a value that was only partially computed due to this exception. The caller can use
+   * this while collecting additional configuration problems.
    *
    * @return the partial value, or {@code null} if none was set. The type of the partial value is
-   *     specified by the throwing method.
+   *      specified by the throwing method.
    */
-  @SuppressWarnings({
-    "unchecked",
-    "TypeParameterUnusedInFormals"
-  }) // this is *extremely* unsafe. We trust the caller here.
+  @SuppressWarnings("unchecked") // this is *extremely* unsafe. We trust the caller here.
   public <E> E getPartialValue() {
     return (E) partialValue;
   }
 
   @Override public String getMessage() {
-    return Messages.formatMessages("Guice configuration errors", messages);
+    return Errors.format("Guice configuration errors", messages);
   }
 
   private static final long serialVersionUID = 0;

@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2010 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,7 @@
 
 package com.google.inject.servlet;
 
+import javax.servlet.http.Cookie;
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
@@ -29,6 +30,9 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+
+import junit.framework.TestCase;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.AbstractExecutorService;
@@ -38,73 +42,66 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import junit.framework.TestCase;
 
-/** Tests continuation of requests */
+/**
+ * Tests continuation of requests
+ */
 
 public class ContinuingRequestIntegrationTest extends TestCase {
   private static final String PARAM_VALUE = "there";
   private static final String PARAM_NAME = "hi";
 
   private final AtomicBoolean failed = new AtomicBoolean(false);
-  private final AbstractExecutorService sameThreadExecutor =
-      new AbstractExecutorService() {
-        @Override
-        public void shutdown() {}
+  private final AbstractExecutorService sameThreadExecutor = new AbstractExecutorService() {
+    public void shutdown() {
+    }
 
-        @Override
-        public List<Runnable> shutdownNow() {
-          return ImmutableList.of();
-        }
+    public List<Runnable> shutdownNow() {
+      return ImmutableList.of();
+    }
 
-        @Override
-        public boolean isShutdown() {
-          return true;
-        }
+    public boolean isShutdown() {
+      return true;
+    }
 
-        @Override
-        public boolean isTerminated() {
-          return true;
-        }
+    public boolean isTerminated() {
+      return true;
+    }
 
-        @Override
-        public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
-          return true;
-        }
+    public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+      return true;
+    }
 
-        @Override
-        public void execute(Runnable command) {
-          command.run();
-        }
+    public void execute(Runnable command) {
+      command.run();
+    }
 
-        @Override
-        public <T> Future<T> submit(Callable<T> task) {
-          try {
-            task.call();
-            fail();
-          } catch (Exception e) {
-            // Expected.
-            assertTrue(e instanceof IllegalStateException);
-            failed.set(true);
-          }
+    @Override public <T> Future<T> submit(Callable<T> task) {
+      try {
+        task.call();
+        fail();
+      } catch (Exception e) {
+        // Expected.
+        assertTrue(e instanceof IllegalStateException);
+        failed.set(true);
+      }
 
-          return null;
-        }
-      };
+      return null;
+    }
+  };
 
   private ExecutorService executor;
   private Injector injector;
 
-  @Override
-  protected void tearDown() throws Exception {
+  @Override protected void tearDown() throws Exception {
     injector.getInstance(GuiceFilter.class).destroy();
   }
 
@@ -112,16 +109,13 @@ public class ContinuingRequestIntegrationTest extends TestCase {
       throws ServletException, IOException, InterruptedException {
     executor = Executors.newSingleThreadExecutor();
 
-    injector =
-        Guice.createInjector(
-            new ServletModule() {
-              @Override
-              protected void configureServlets() {
-                serve("/*").with(ContinuingServlet.class);
+    injector = Guice.createInjector(new ServletModule() {
+      @Override protected void configureServlets() {
+        serve("/*").with(ContinuingServlet.class);
 
-                bind(ExecutorService.class).toInstance(executor);
-              }
-            });
+        bind(ExecutorService.class).toInstance(executor);
+      }
+    });
 
     FilterConfig filterConfig = createMock(FilterConfig.class);
     expect(filterConfig.getServletContext()).andReturn(createMock(ServletContext.class));
@@ -131,7 +125,9 @@ public class ContinuingRequestIntegrationTest extends TestCase {
     HttpServletRequest request = createMock(HttpServletRequest.class);
 
     expect(request.getRequestURI()).andReturn("/");
-    expect(request.getContextPath()).andReturn("").anyTimes();
+    expect(request.getContextPath())
+        .andReturn("")
+        .anyTimes();
     expect(request.getMethod()).andReturn("GET");
     expect(request.getCookies()).andReturn(new Cookie[0]);
 
@@ -154,18 +150,15 @@ public class ContinuingRequestIntegrationTest extends TestCase {
   public final void testRequestContinuationDiesInHttpRequestThread()
       throws ServletException, IOException, InterruptedException {
     executor = sameThreadExecutor;
-    injector =
-        Guice.createInjector(
-            new ServletModule() {
-              @Override
-              protected void configureServlets() {
-                serve("/*").with(ContinuingServlet.class);
+    injector = Guice.createInjector(new ServletModule() {
+      @Override protected void configureServlets() {
+        serve("/*").with(ContinuingServlet.class);
 
-                bind(ExecutorService.class).toInstance(executor);
+        bind(ExecutorService.class).toInstance(executor);
 
-                bind(SomeObject.class);
-              }
-            });
+        bind(SomeObject.class);
+      }
+    });
 
     FilterConfig filterConfig = createMock(FilterConfig.class);
     expect(filterConfig.getServletContext()).andReturn(createMock(ServletContext.class));
@@ -175,7 +168,9 @@ public class ContinuingRequestIntegrationTest extends TestCase {
     HttpServletRequest request = createMock(HttpServletRequest.class);
 
     expect(request.getRequestURI()).andReturn("/");
-    expect(request.getContextPath()).andReturn("").anyTimes();
+    expect(request.getContextPath())
+        .andReturn("")
+        .anyTimes();
 
     expect(request.getMethod()).andReturn("GET");
     expect(request.getCookies()).andReturn(new Cookie[0]);
@@ -197,7 +192,8 @@ public class ContinuingRequestIntegrationTest extends TestCase {
   }
 
   @RequestScoped
-  public static class SomeObject {}
+  public static class SomeObject {
+  }
 
   @Singleton
   public static class ContinuingServlet extends HttpServlet {
@@ -206,16 +202,14 @@ public class ContinuingRequestIntegrationTest extends TestCase {
 
     private SomeObject someObject;
 
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+    @Override protected void doGet(HttpServletRequest req, HttpServletResponse resp)
         throws ServletException, IOException {
       assertNull(someObject);
 
       // Seed with someobject.
       someObject = new SomeObject();
-      Callable<String> task =
-          ServletScopes.continueRequest(
-              callable, ImmutableMap.<Key<?>, Object>of(Key.get(SomeObject.class), someObject));
+      Callable<String> task = ServletScopes.continueRequest(callable,
+          ImmutableMap.<Key<?>, Object>of(Key.get(SomeObject.class), someObject));
 
       executorService.submit(task);
     }
@@ -229,7 +223,6 @@ public class ContinuingRequestIntegrationTest extends TestCase {
 
     public String value;
 
-    @Override
     public String call() throws Exception {
       assertNull(response.get());
 

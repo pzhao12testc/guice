@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2006 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,15 +24,20 @@ import static com.google.inject.matcher.Matchers.only;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.spi.InjectionPoint;
+
+import junit.framework.TestCase;
+
+import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.MethodInvocation;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
-import junit.framework.TestCase;
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
 
-/** @author crazybob@google.com (Bob Lee) */
+/**
+ * @author crazybob@google.com (Bob Lee)
+ */
 public class ProxyFactoryTest extends TestCase {
 
   List<MethodAspect> aspects = Lists.newArrayList();
@@ -43,7 +48,7 @@ public class ProxyFactoryTest extends TestCase {
     InjectionPoint injectionPoint = InjectionPoint.forConstructorOf(Simple.class);
 
     aspects.add(new MethodAspect(any(), any(), interceptor));
-    ProxyFactory<Simple> factory = new ProxyFactory<>(injectionPoint, aspects);
+    ProxyFactory<Simple> factory = new ProxyFactory<Simple>(injectionPoint, aspects);
 
     ConstructionProxy<Simple> constructionProxy = factory.create();
 
@@ -55,7 +60,6 @@ public class ProxyFactoryTest extends TestCase {
 
   static class Simple {
     boolean invoked = false;
-
     public void invoke() {
       invoked = true;
     }
@@ -65,7 +69,6 @@ public class ProxyFactoryTest extends TestCase {
 
     boolean invoked = false;
 
-    @Override
     public Object invoke(MethodInvocation methodInvocation) throws Throwable {
       invoked = true;
       return methodInvocation.proceed();
@@ -78,10 +81,10 @@ public class ProxyFactoryTest extends TestCase {
 
     aspects.add(new MethodAspect(only(Bar.class), annotatedWith(Intercept.class), interceptor));
 
-    ConstructionProxy<Foo> fooFactory =
-        new ProxyFactory<Foo>(InjectionPoint.forConstructorOf(Foo.class), aspects).create();
-    ConstructionProxy<Bar> barFactory =
-        new ProxyFactory<Bar>(InjectionPoint.forConstructorOf(Bar.class), aspects).create();
+    ConstructionProxy<Foo> fooFactory
+        = new ProxyFactory<Foo>(InjectionPoint.forConstructorOf(Foo.class), aspects).create();
+    ConstructionProxy<Bar> barFactory
+        = new ProxyFactory<Bar>(InjectionPoint.forConstructorOf(Bar.class), aspects).create();
 
     Foo foo = fooFactory.newInstance();
     Bar bar = barFactory.newInstance();
@@ -101,7 +104,6 @@ public class ProxyFactoryTest extends TestCase {
 
   static class Foo {
     boolean fooCalled;
-
     @Intercept
     void foo() {
       fooCalled = true;
@@ -111,7 +113,6 @@ public class ProxyFactoryTest extends TestCase {
   static class Bar {
 
     boolean barCalled;
-
     void bar() {
       barCalled = true;
     }
@@ -132,8 +133,8 @@ public class ProxyFactoryTest extends TestCase {
     SimpleInterceptor interceptor = new SimpleInterceptor();
 
     aspects.add(new MethodAspect(any(), any(), interceptor));
-    ProxyFactory<A> factory =
-        new ProxyFactory<A>(InjectionPoint.forConstructorOf(A.class), aspects);
+    ProxyFactory<A> factory
+        = new ProxyFactory<A>(InjectionPoint.forConstructorOf(A.class), aspects);
 
     ConstructionProxy<A> constructor = factory.create();
 
@@ -147,8 +148,8 @@ public class ProxyFactoryTest extends TestCase {
     SimpleInterceptor interceptor = new SimpleInterceptor();
 
     aspects.add(new MethodAspect(not(any()), not(any()), interceptor));
-    ProxyFactory<A> factory =
-        new ProxyFactory<A>(InjectionPoint.forConstructorOf(A.class), aspects);
+    ProxyFactory<A> factory
+        = new ProxyFactory<A>(InjectionPoint.forConstructorOf(A.class), aspects);
 
     ConstructionProxy<A> constructor = factory.create();
 
@@ -158,12 +159,9 @@ public class ProxyFactoryTest extends TestCase {
 
   static class A {
     final int i;
-
-    @Inject
-    public A(int i) {
+    @Inject public A(int i) {
       this.i = i;
     }
-
     public void a() {}
   }
 
@@ -173,8 +171,8 @@ public class ProxyFactoryTest extends TestCase {
     CountingInterceptor countingInterceptor = new CountingInterceptor();
 
     aspects.add(new MethodAspect(any(), any(), doubleInterceptor, countingInterceptor));
-    ProxyFactory<Counter> factory =
-        new ProxyFactory<Counter>(InjectionPoint.forConstructorOf(Counter.class), aspects);
+    ProxyFactory<Counter> factory
+        = new ProxyFactory<Counter>(InjectionPoint.forConstructorOf(Counter.class), aspects);
 
     ConstructionProxy<Counter> constructor = factory.create();
 
@@ -188,7 +186,6 @@ public class ProxyFactoryTest extends TestCase {
 
     int count;
 
-    @Override
     public Object invoke(MethodInvocation methodInvocation) throws Throwable {
       count++;
       return methodInvocation.proceed();
@@ -197,7 +194,6 @@ public class ProxyFactoryTest extends TestCase {
 
   static class DoubleInterceptor implements MethodInterceptor {
 
-    @Override
     public Object invoke(MethodInvocation methodInvocation) throws Throwable {
       methodInvocation.proceed();
       return methodInvocation.proceed();
@@ -206,7 +202,6 @@ public class ProxyFactoryTest extends TestCase {
 
   static class Counter {
     int count;
-
     void inc() {
       count++;
     }

@@ -1,3 +1,5 @@
 package example.xml;
 
-public class Contact {}
+public class Contact {
+
+}

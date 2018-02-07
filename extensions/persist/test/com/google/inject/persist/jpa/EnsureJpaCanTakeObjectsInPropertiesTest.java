@@ -49,7 +49,7 @@ public class EnsureJpaCanTakeObjectsInPropertiesTest extends TestCase {
 
     @Override
     protected void configure() {
-      Map<String, Object> p = new HashMap<>();
+      Map<String, Object> p = new HashMap<String, Object>();
 
       p.put(Environment.CONNECTION_PROVIDER, InjectedDataSourceConnectionProvider.class.getName());
       if (passDataSource) {

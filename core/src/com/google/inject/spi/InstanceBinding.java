@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2008 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,7 @@
 package com.google.inject.spi;
 
 import com.google.inject.Binding;
+
 import java.util.Set;
 
 /**
@@ -27,7 +28,9 @@ import java.util.Set;
  */
 public interface InstanceBinding<T> extends Binding<T>, HasDependencies {
 
-  /** Returns the user-supplied instance. */
+  /**
+   * Returns the user-supplied instance.
+   */
   T getInstance();
 
   /**
@@ -37,4 +40,5 @@ public interface InstanceBinding<T> extends Binding<T>, HasDependencies {
    * @return a possibly empty set
    */
   Set<InjectionPoint> getInjectionPoints();
+
 }
