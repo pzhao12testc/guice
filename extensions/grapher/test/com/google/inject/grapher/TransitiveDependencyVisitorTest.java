@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2008 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,9 +35,11 @@ import com.google.inject.spi.LinkedKeyBinding;
 import com.google.inject.spi.ProviderBinding;
 import com.google.inject.spi.ProviderInstanceBinding;
 import com.google.inject.spi.ProviderKeyBinding;
+
+import junit.framework.TestCase;
+
 import java.util.Collection;
 import java.util.Set;
-import junit.framework.TestCase;
 
 /**
  * Tests for {@link TransitiveDependencyVisitor}.
@@ -46,42 +48,45 @@ import junit.framework.TestCase;
  */
 public class TransitiveDependencyVisitorTest extends TestCase {
   private TransitiveDependencyVisitor visitor;
-
+  
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-
+    
     visitor = new TransitiveDependencyVisitor();
   }
 
   public void testVisitConstructor() {
     Binding<?> binding = getBinding(Key.get(ConstructedClass.class));
     Collection<Key<?>> dependencies = visitor.visit((ConstructorBinding<?>) binding);
-
-    assertDependencies(
-        dependencies, Key.get(A.class), Key.get(B.class), Key.get(C.class), Key.get(D.class));
+    
+    assertDependencies(dependencies, Key.get(A.class), Key.get(B.class), Key.get(C.class),
+        Key.get(D.class));
   }
 
   public void testVisitConvertedConstant() {
-    Binding<?> binding =
-        getBinding(Key.get(Integer.class, Names.named("number")), new ConvertedConstantModule());
-    Collection<Key<?>> dependencies = visitor.visit((ConvertedConstantBinding<?>) binding);
-
+    Binding<?> binding = getBinding(Key.get(Integer.class, Names.named("number")),
+        new ConvertedConstantModule());
+    Collection<Key<?>> dependencies = visitor.visit(
+        (ConvertedConstantBinding<?>) binding);
+    
     assertDependencies(dependencies, Key.get(String.class, Names.named("number")));
   }
 
   public void testVisitInstance() {
     Binding<?> binding = getBinding(Key.get(ConstructedClass.class), new InstanceModule());
-    Collection<Key<?>> dependencies = visitor.visit((InstanceBinding<?>) binding);
-
+    Collection<Key<?>> dependencies = visitor.visit(
+        (InstanceBinding<?>) binding);
+    
     // Dependencies will only be on the field- and method-injected classes.
     assertDependencies(dependencies, Key.get(A.class), Key.get(D.class));
   }
 
   public void testVisitInstance_instanceHasDependencies() {
     Binding<?> binding = getBinding(Key.get(Interface.class), new HasDependenciesModule());
-    Collection<Key<?>> dependencies = visitor.visit((InstanceBinding<?>) binding);
-
+    Collection<Key<?>> dependencies = visitor.visit(
+        (InstanceBinding<?>) binding);
+    
     // Dependencies should only be on the stated
     // HasDependencies#getDependencies() values
     assertDependencies(dependencies, Key.get(G.class));
@@ -98,14 +103,16 @@ public class TransitiveDependencyVisitorTest extends TestCase {
   public void testVisitProviderBinding() {
     Binding<?> binding = getBinding(Key.get(new TypeLiteral<Provider<ConstructedClass>>() {}));
     Collection<Key<?>> dependencies = visitor.visit((ProviderBinding<?>) binding);
-
+    
     assertDependencies(dependencies, Key.get(ConstructedClass.class));
   }
 
   public void testVisitProviderInstance() {
-    Binding<?> binding = getBinding(Key.get(ConstructedClass.class), new ProviderInstanceModule());
-    Collection<Key<?>> dependencies = visitor.visit((ProviderInstanceBinding<?>) binding);
-
+    Binding<?> binding = getBinding(Key.get(ConstructedClass.class),
+        new ProviderInstanceModule());
+    Collection<Key<?>> dependencies = visitor.visit(
+        (ProviderInstanceBinding<?>) binding);
+    
     // Dependencies will only be on the field- and method-injected classes.
     assertDependencies(dependencies, Key.get(E.class), Key.get(F.class));
   }
@@ -117,15 +124,15 @@ public class TransitiveDependencyVisitorTest extends TestCase {
     // Dependency should be to the class that provides this one.
     assertDependencies(dependencies, Key.get(ConstructedClassProvider.class));
   }
-
+  
   private Binding<?> getBinding(Key<?> key, Module... modules) {
     return Guice.createInjector(modules).getBinding(key);
   }
-
+  
   private void assertDependencies(Collection<Key<?>> dependencies, Key<?>... keys) {
     assertNotNull("Dependencies should not be null", dependencies);
-    assertEquals(
-        "There should be " + keys.length + " dependencies", keys.length, dependencies.size());
+    assertEquals("There should be " + keys.length + " dependencies",
+        keys.length, dependencies.size());
 
     for (Key<?> key : keys) {
       assertTrue("Dependencies should contain " + key, dependencies.contains(key));
@@ -133,45 +140,28 @@ public class TransitiveDependencyVisitorTest extends TestCase {
   }
 
   private static class A {}
-
   private static class B {}
-
   private static class C {}
-
   private static class D {}
-
   private static class E {}
-
   private static class F {}
-
   private static class G {}
-
+  
   private static interface Interface {}
-
+  
   private static class ConstructedClass implements Interface {
     @Inject A a;
-
     ConstructedClass() {}
-
-    @Inject
-    ConstructedClass(B b, C c) {}
-
-    @Inject
-    void setD(D d) {}
+    @Inject ConstructedClass(B b, C c) {}
+    @Inject void setD(D d) {}
   }
 
   private static class ConstructedClassProvider implements Provider<ConstructedClass> {
     @Inject E e;
-
     ConstructedClassProvider() {}
-
-    @Inject
-    ConstructedClassProvider(A a, B b, C c) {}
-
-    @Inject
-    void setF(F f) {}
-
-    @Override
+    @Inject ConstructedClassProvider(A a, B b, C c) {}
+    @Inject void setF(F f) {}
+    
     public ConstructedClass get() {
       return null;
     }
@@ -180,8 +170,7 @@ public class TransitiveDependencyVisitorTest extends TestCase {
   private static class HasDependenciesClass implements Interface, HasDependencies {
     @Inject A a;
     @Inject B b;
-
-    @Override
+    
     public Set<Dependency<?>> getDependencies() {
       return ImmutableSet.<Dependency<?>>of(Dependency.get(Key.get(G.class)));
     }
@@ -207,7 +196,7 @@ public class TransitiveDependencyVisitorTest extends TestCase {
       bind(Interface.class).to(ConstructedClass.class);
     }
   }
-
+  
   private static class ProviderInstanceModule extends AbstractModule {
     @Override
     protected void configure() {
@@ -221,7 +210,7 @@ public class TransitiveDependencyVisitorTest extends TestCase {
       bind(Interface.class).toInstance(new HasDependenciesClass());
     }
   }
-
+  
   private static class ProviderKeyModule extends AbstractModule {
     @Override
     protected void configure() {

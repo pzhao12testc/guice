@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2009 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,77 +33,71 @@ import com.google.inject.spi.InjectionPoint;
 final class MembersInjectorImpl<T> implements MembersInjector<T> {
   private final TypeLiteral<T> typeLiteral;
   private final InjectorImpl injector;
-  // a null list means empty. Since it is common for many of these lists to be empty we can save
-  // some memory lookups by representing empty as null.
-  /* @Nullable */ private final ImmutableList<SingleMemberInjector> memberInjectors;
-  /* @Nullable */ private final ImmutableList<MembersInjector<? super T>> userMembersInjectors;
-  /* @Nullable */ private final ImmutableList<InjectionListener<? super T>> injectionListeners;
-  /*if[AOP]*//* @Nullable */ private final ImmutableList<MethodAspect> addedAspects;
+  private final ImmutableList<SingleMemberInjector> memberInjectors;
+  private final ImmutableSet<MembersInjector<? super T>> userMembersInjectors;
+  private final ImmutableSet<InjectionListener<? super T>> injectionListeners;
+  /*if[AOP]*/
+  private final ImmutableList<MethodAspect> addedAspects;
   /*end[AOP]*/
 
-  MembersInjectorImpl(
-      InjectorImpl injector,
-      TypeLiteral<T> typeLiteral,
-      EncounterImpl<T> encounter,
-      ImmutableList<SingleMemberInjector> memberInjectors) {
+  MembersInjectorImpl(InjectorImpl injector, TypeLiteral<T> typeLiteral,
+      EncounterImpl<T> encounter, ImmutableList<SingleMemberInjector> memberInjectors) {
     this.injector = injector;
     this.typeLiteral = typeLiteral;
-    this.memberInjectors = memberInjectors.isEmpty() ? null : memberInjectors;
-    this.userMembersInjectors =
-        encounter.getMembersInjectors().isEmpty() ? null : encounter.getMembersInjectors().asList();
-    this.injectionListeners =
-        encounter.getInjectionListeners().isEmpty()
-            ? null
-            : encounter.getInjectionListeners().asList();
+    this.memberInjectors = memberInjectors;
+    this.userMembersInjectors = encounter.getMembersInjectors();
+    this.injectionListeners = encounter.getInjectionListeners();
     /*if[AOP]*/
-    this.addedAspects = encounter.getAspects().isEmpty() ? null : encounter.getAspects();
+    this.addedAspects = encounter.getAspects();
     /*end[AOP]*/
   }
 
   public ImmutableList<SingleMemberInjector> getMemberInjectors() {
-    return memberInjectors == null ? ImmutableList.<SingleMemberInjector>of() : memberInjectors;
+    return memberInjectors;
   }
 
-  @Override
   public void injectMembers(T instance) {
-    TypeLiteral<T> localTypeLiteral = typeLiteral;
+    Errors errors = new Errors(typeLiteral);
     try {
-      injectAndNotify(instance, null, null, localTypeLiteral, false);
-    } catch (InternalProvisionException ipe) {
-      throw ipe.addSource(localTypeLiteral).toProvisionException();
+      injectAndNotify(instance, errors, null, null, typeLiteral, false);
+    } catch (ErrorsException e) {
+      errors.merge(e.getErrors());
     }
+
+    errors.throwProvisionExceptionIfErrorsExist();
   }
 
-  void injectAndNotify(
-      final T instance,
+  void injectAndNotify(final T instance,
+      final Errors errors,
       final Key<T> key, // possibly null!
       final ProvisionListenerStackCallback<T> provisionCallback, // possibly null!
       final Object source,
-      final boolean toolableOnly)
-      throws InternalProvisionException {
+      final boolean toolableOnly) throws ErrorsException {
     if (instance == null) {
       return;
     }
-    final InternalContext context = injector.enterContext();
-    context.pushState(key, source);
-    try {
-      if (provisionCallback != null && provisionCallback.hasListeners()) {
-        provisionCallback.provision(
-            context,
-            new ProvisionCallback<T>() {
-              @Override
-              public T call() throws InternalProvisionException {
-                injectMembers(instance, context, toolableOnly);
+
+    injector.callInContext(new ContextualCallable<Void>() {
+      @Override
+      public Void call(final InternalContext context) throws ErrorsException {
+        context.pushState(key, source);
+        try {
+          if (provisionCallback != null && provisionCallback.hasListeners()) {
+            provisionCallback.provision(errors, context, new ProvisionCallback<T>() {
+              @Override public T call() {
+                injectMembers(instance, errors, context, toolableOnly);
                 return instance;
               }
             });
-      } else {
-        injectMembers(instance, context, toolableOnly);
+          } else {
+            injectMembers(instance, errors, context, toolableOnly);
+          }
+        } finally {
+          context.popState();
+        }
+        return null;
       }
-    } finally {
-      context.popState();
-      context.close();
-    }
+    });
 
     // TODO: We *could* notify listeners too here,
     // but it's not clear if we want to.  There's no way to know
@@ -113,80 +107,59 @@ final class MembersInjectorImpl<T> implements MembersInjector<T> {
     // if atleast one InjectionPoint was toolable, in which case
     // the above callInContext could return 'true' if it injected
     // anything.)
-    if (!toolableOnly) {
-      notifyListeners(instance);
+    if(!toolableOnly) {
+      notifyListeners(instance, errors);
     }
   }
 
-  void notifyListeners(T instance) throws InternalProvisionException {
-    ImmutableList<InjectionListener<? super T>> localInjectionListeners = injectionListeners;
-    if (localInjectionListeners == null) {
-      // no listeners
-      return;
-    }
-    // optimization: use manual for/each to save allocating an iterator here
-    for (int i = 0; i < localInjectionListeners.size(); i++) {
-      InjectionListener<? super T> injectionListener = localInjectionListeners.get(i);
+  void notifyListeners(T instance, Errors errors) throws ErrorsException {
+    int numErrorsBefore = errors.size();
+    for (InjectionListener<? super T> injectionListener : injectionListeners) {
       try {
         injectionListener.afterInjection(instance);
       } catch (RuntimeException e) {
-        throw InternalProvisionException.errorNotifyingInjectionListener(
-            injectionListener, typeLiteral, e);
+        errors.errorNotifyingInjectionListener(injectionListener, typeLiteral, e);
       }
     }
+    errors.throwIfNewErrors(numErrorsBefore);
   }
 
-  void injectMembers(T t, InternalContext context, boolean toolableOnly)
-      throws InternalProvisionException {
-    ImmutableList<SingleMemberInjector> localMembersInjectors = memberInjectors;
-    if (localMembersInjectors != null) {
-      // optimization: use manual for/each to save allocating an iterator here
-      for (int i = 0, size = localMembersInjectors.size(); i < size; i++) {
-        SingleMemberInjector injector = localMembersInjectors.get(i);
-        if (!toolableOnly || injector.getInjectionPoint().isToolable()) {
-          injector.inject(context, t);
-        }
+  void injectMembers(T t, Errors errors, InternalContext context, boolean toolableOnly) {
+    // optimization: use manual for/each to save allocating an iterator here
+    for (int i = 0, size = memberInjectors.size(); i < size; i++) {
+      SingleMemberInjector injector = memberInjectors.get(i);
+      if(!toolableOnly || injector.getInjectionPoint().isToolable()) {
+        injector.inject(errors, context, t);
       }
     }
 
     // TODO: There's no way to know if a user's MembersInjector wants toolable injections.
-    if (!toolableOnly) {
-      ImmutableList<MembersInjector<? super T>> localUsersMembersInjectors = userMembersInjectors;
-      if (localUsersMembersInjectors != null) {
-        // optimization: use manual for/each to save allocating an iterator here
-        for (int i = 0; i < localUsersMembersInjectors.size(); i++) {
-          MembersInjector<? super T> userMembersInjector = localUsersMembersInjectors.get(i);
-          try {
-            userMembersInjector.injectMembers(t);
-          } catch (RuntimeException e) {
-            throw InternalProvisionException.errorInUserInjector(
-                userMembersInjector, typeLiteral, e);
-          }
+    if(!toolableOnly) {
+      for (MembersInjector<? super T> userMembersInjector : userMembersInjectors) {
+        try {
+          userMembersInjector.injectMembers(t);
+        } catch (RuntimeException e) {
+          errors.errorInUserInjector(userMembersInjector, typeLiteral, e);
         }
       }
     }
   }
 
-  @Override
-  public String toString() {
+  @Override public String toString() {
     return "MembersInjector<" + typeLiteral + ">";
   }
 
   public ImmutableSet<InjectionPoint> getInjectionPoints() {
-    ImmutableList<SingleMemberInjector> localMemberInjectors = memberInjectors;
-    if (localMemberInjectors != null) {
-      ImmutableSet.Builder<InjectionPoint> builder = ImmutableSet.builder();
-      for (SingleMemberInjector memberInjector : localMemberInjectors) {
-        builder.add(memberInjector.getInjectionPoint());
-      }
-      return builder.build();
+    ImmutableSet.Builder<InjectionPoint> builder = ImmutableSet.builder();
+    for (SingleMemberInjector memberInjector : memberInjectors) {
+      builder.add(memberInjector.getInjectionPoint());
     }
-    return ImmutableSet.of();
+    return builder.build();
   }
 
   /*if[AOP]*/
   public ImmutableList<MethodAspect> getAddedAspects() {
-    return addedAspects == null ? ImmutableList.<MethodAspect>of() : addedAspects;
+    return addedAspects;
   }
   /*end[AOP]*/
 }

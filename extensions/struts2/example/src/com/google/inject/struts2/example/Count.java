@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2006 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,9 +16,8 @@
 
 package com.google.inject.struts2.example;
 
-import static com.opensymphony.xwork2.Action.SUCCESS;
-
 import com.google.inject.Inject;
+import static com.opensymphony.xwork2.Action.SUCCESS;
 
 public class Count {
 

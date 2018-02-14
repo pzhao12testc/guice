@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2009 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,9 +20,12 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Binder;
 import com.google.inject.Key;
 import com.google.inject.binder.AnnotatedElementBuilder;
+
 import java.lang.annotation.Annotation;
 
-/** For private binder's expose() method. */
+/**
+ * For private binder's expose() method.
+ */
 public class ExposureBuilder<T> implements AnnotatedElementBuilder {
   private final Binder binder;
   private final Object source;
@@ -40,14 +43,12 @@ public class ExposureBuilder<T> implements AnnotatedElementBuilder {
     }
   }
 
-  @Override
   public void annotatedWith(Class<? extends Annotation> annotationType) {
     Preconditions.checkNotNull(annotationType, "annotationType");
     checkNotAnnotated();
     key = Key.get(key.getTypeLiteral(), annotationType);
   }
 
-  @Override
   public void annotatedWith(Annotation annotation) {
     Preconditions.checkNotNull(annotation, "annotation");
     checkNotAnnotated();
@@ -62,8 +63,7 @@ public class ExposureBuilder<T> implements AnnotatedElementBuilder {
     return source;
   }
 
-  @Override
-  public String toString() {
+  @Override public String toString() {
     return "AnnotatedElementBuilder";
   }
 }

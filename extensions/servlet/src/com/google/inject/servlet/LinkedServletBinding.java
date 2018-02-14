@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2010 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,10 +17,11 @@
 package com.google.inject.servlet;
 
 import com.google.inject.Key;
+
 import javax.servlet.http.HttpServlet;
 
 /**
- * A linked binding to a servlet.
+ * A linked binding to a servlet. 
  *
  * @author sameb@google.com
  * @since 3.0
@@ -29,4 +30,5 @@ public interface LinkedServletBinding extends ServletModuleBinding {
 
   /** Returns the key used to lookup the servlet instance. */
   Key<? extends HttpServlet> getLinkedKey();
+
 }

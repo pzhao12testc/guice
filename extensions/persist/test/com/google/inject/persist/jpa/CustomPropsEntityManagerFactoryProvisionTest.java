@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2010 Google, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,12 +20,17 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.persist.PersistService;
 import com.google.inject.persist.UnitOfWork;
-import java.util.Properties;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
+
 import junit.framework.TestCase;
 
-/** @author Dhanji R. Prasanna (dhanji@gmail.com) */
+import java.util.Properties;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+
+/**
+ * @author Dhanji R. Prasanna (dhanji@gmail.com)
+ */
 
 public class CustomPropsEntityManagerFactoryProvisionTest extends TestCase {
   private Injector injector;
@@ -46,8 +51,7 @@ public class CustomPropsEntityManagerFactoryProvisionTest extends TestCase {
 
   public void testSessionCreateOnInjection() {
 
-    assertEquals(
-        "SINGLETON VIOLATION " + UnitOfWork.class.getName(),
+    assertEquals("SINGLETON VIOLATION " + UnitOfWork.class.getName(),
         injector.getInstance(UnitOfWork.class),
         injector.getInstance(UnitOfWork.class));
 

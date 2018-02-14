@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2010 Google, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,18 +21,21 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.persist.PersistService;
 import com.google.inject.persist.Transactional;
+
+import junit.framework.TestCase;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+
 import javax.persistence.EntityManager;
-import junit.framework.TestCase;
 
 /**
  * This test asserts class level @Transactional annotation behavior.
  *
- * <p>Class-level @Transactional is a shortcut if all non-private methods in the class are meant to
- * be transactional.
+ * Class-level @Transactional is a shortcut if all non-private methods in the class are meant to be
+ * transactional.
  *
  * @author Dhanji R. Prasanna (dhanji@gmail.com)
  */
@@ -41,10 +44,9 @@ public class ClassLevelManagedLocalTransactionsTest extends TestCase {
   private Injector injector;
   private static final String UNIQUE_TEXT = "JPAsome unique text88888" + new Date();
   private static final String UNIQUE_TEXT_2 = "JPAsome asda unique teasdalsdplasdxt" + new Date();
-  private static final String TRANSIENT_UNIQUE_TEXT =
-      "JPAsome other unique texaksoksojadasdt" + new Date();
+  private static final String TRANSIENT_UNIQUE_TEXT = "JPAsome other unique texaksoksojadasdt"
+      + new Date();
 
-  @Override
   public void setUp() {
     injector = Guice.createInjector(new JpaPersistModule("testUnit"));
 
@@ -52,7 +54,6 @@ public class ClassLevelManagedLocalTransactionsTest extends TestCase {
     injector.getInstance(PersistService.class).start();
   }
 
-  @Override
   public void tearDown() {
     injector.getInstance(PersistService.class).stop();
     injector = null;
@@ -62,26 +63,20 @@ public class ClassLevelManagedLocalTransactionsTest extends TestCase {
     injector.getInstance(TransactionalObject.class).runOperationInTxn();
 
     EntityManager session = injector.getInstance(EntityManager.class);
-    assertFalse(
-        "EntityManager was not closed by transactional service",
+    assertFalse("EntityManager was not closed by transactional service",
         session.getTransaction().isActive());
 
     //test that the data has been stored
     session.getTransaction().begin();
-    Object result =
-        session
-            .createQuery("from JpaTestEntity where text = :text")
-            .setParameter("text", UNIQUE_TEXT)
-            .getSingleResult();
+    Object result = session.createQuery("from JpaTestEntity where text = :text")
+        .setParameter("text", UNIQUE_TEXT).getSingleResult();
 
     session.getTransaction().commit();
 
     assertTrue("odd result returned fatal", result instanceof JpaTestEntity);
 
-    assertEquals(
-        "queried entity did not match--did automatic txn fail?",
-        UNIQUE_TEXT,
-        (((JpaTestEntity) result).getText()));
+    assertEquals("queried entity did not match--did automatic txn fail?",
+        UNIQUE_TEXT, (((JpaTestEntity) result).getText()));
   }
 
   public void testSimpleTransactionRollbackOnChecked() {
@@ -92,17 +87,13 @@ public class ClassLevelManagedLocalTransactionsTest extends TestCase {
     }
 
     EntityManager session = injector.getInstance(EntityManager.class);
-    assertFalse(
-        "EntityManager was not closed by transactional service (rollback didnt happen?)",
+    assertFalse("EntityManager was not closed by transactional service (rollback didnt happen?)",
         session.getTransaction().isActive());
 
     //test that the data has been stored
     session.getTransaction().begin();
-    List<?> result =
-        session
-            .createQuery("from JpaTestEntity where text = :text")
-            .setParameter("text", TRANSIENT_UNIQUE_TEXT)
-            .getResultList();
+    List<?> result = session.createQuery("from JpaTestEntity where text = :text")
+        .setParameter("text", TRANSIENT_UNIQUE_TEXT).getResultList();
 
     session.getTransaction().commit();
 
@@ -119,21 +110,18 @@ public class ClassLevelManagedLocalTransactionsTest extends TestCase {
     }
 
     EntityManager session = injector.getInstance(EntityManager.class);
-    assertFalse(
-        "Txn was not closed by transactional service (commit didnt happen?)",
+    assertFalse("Txn was not closed by transactional service (commit didnt happen?)",
         session.getTransaction().isActive());
 
     //test that the data has been stored
     session.getTransaction().begin();
-    Object result =
-        session
-            .createQuery("from JpaTestEntity where text = :text")
-            .setParameter("text", UNIQUE_TEXT_2)
-            .getSingleResult();
+    Object result = session.createQuery("from JpaTestEntity where text = :text")
+        .setParameter("text", UNIQUE_TEXT_2).getSingleResult();
 
     session.getTransaction().commit();
 
-    assertNotNull("a result was not returned! rollback happened anyway (ignore failed)!!!", result);
+    assertNotNull("a result was not returned! rollback happened anyway (ignore failed)!!!",
+        result);
   }
 
   public void testSimpleTransactionRollbackOnUnchecked() {
@@ -144,21 +132,18 @@ public class ClassLevelManagedLocalTransactionsTest extends TestCase {
     }
 
     EntityManager session = injector.getInstance(EntityManager.class);
-    assertFalse(
-        "EntityManager was not closed by transactional service (rollback didnt happen?)",
+    assertFalse("EntityManager was not closed by transactional service (rollback didnt happen?)",
         session.getTransaction().isActive());
 
     //test that the data has been stored
     session.getTransaction().begin();
-    List<?> result =
-        session
-            .createQuery("from JpaTestEntity where text = :text")
-            .setParameter("text", TRANSIENT_UNIQUE_TEXT)
-            .getResultList();
+    List<?> result = session.createQuery("from JpaTestEntity where text = :text")
+        .setParameter("text", TRANSIENT_UNIQUE_TEXT).getResultList();
 
     session.getTransaction().commit();
 
-    assertTrue("a result was returned! rollback sure didnt happen!!!", result.isEmpty());
+    assertTrue("a result was returned! rollback sure didnt happen!!!",
+        result.isEmpty());
   }
 
   @Transactional
@@ -171,6 +156,7 @@ public class ClassLevelManagedLocalTransactionsTest extends TestCase {
       entity.setText(UNIQUE_TEXT);
       session.persist(entity);
     }
+
   }
 
   @Transactional

@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2006 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,22 +18,28 @@ package com.google.inject.internal;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.spi.InjectionPoint;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
 
 /**
- * Proxies calls to a {@link java.lang.reflect.Constructor} for a class {@code T}.
+ * Proxies calls to a {@link java.lang.reflect.Constructor} for a class
+ * {@code T}.
  *
  * @author crazybob@google.com (Bob Lee)
  */
 interface ConstructionProxy<T> {
 
-  /** Constructs an instance of {@code T} for the given arguments. */
+  /**
+   * Constructs an instance of {@code T} for the given arguments.
+   */
   T newInstance(Object... arguments) throws InvocationTargetException;
 
-  /** Returns the injection point for this constructor. */
+  /**
+   * Returns the injection point for this constructor.
+   */
   InjectionPoint getInjectionPoint();
 
   /**
@@ -43,7 +49,9 @@ interface ConstructionProxy<T> {
   Constructor<T> getConstructor();
 
   /*if[AOP]*/
-  /** Returns the interceptors applied to each method, in order of invocation. */
+  /**
+   * Returns the interceptors applied to each method, in order of invocation.
+   */
   ImmutableMap<Method, List<org.aopalliance.intercept.MethodInterceptor>> getMethodInterceptors();
   /*end[AOP]*/
 }

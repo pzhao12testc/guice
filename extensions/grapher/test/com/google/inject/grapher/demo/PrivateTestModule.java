@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2011 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,11 +25,9 @@ import com.google.inject.PrivateModule;
  */
 public class PrivateTestModule extends PrivateModule {
   interface Exposed {}
-
   static class Hidden implements Exposed {}
 
-  @Override
-  protected void configure() {
+  @Override protected void configure() {
     bind(Exposed.class).to(Hidden.class);
     expose(Exposed.class);
   }

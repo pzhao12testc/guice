@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2008 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,13 +17,14 @@
 package com.google.inject.spi;
 
 import com.google.inject.Scope;
+
 import java.lang.annotation.Annotation;
 
 /**
  * Visits each of the strategies used to scope an injection.
  *
- * @param <V> any type to be returned by the visit method. Use {@link Void} with {@code return null}
- *     if no return type is needed.
+ * @param <V> any type to be returned by the visit method. Use {@link Void} with
+ *     {@code return null} if no return type is needed.
  * @since 2.0
  */
 public interface BindingScopingVisitor<V> {
@@ -34,7 +35,9 @@ public interface BindingScopingVisitor<V> {
    */
   V visitEagerSingleton();
 
-  /** Visit a scope instance. This scope strategy is found on both module and injector bindings. */
+  /**
+   * Visit a scope instance. This scope strategy is found on both module and injector bindings.
+   */
   V visitScope(Scope scope);
 
   /**
@@ -46,9 +49,9 @@ public interface BindingScopingVisitor<V> {
 
   /**
    * Visit an unspecified or unscoped strategy. On a module, this strategy indicates that the
-   * injector should use scoping annotations to find a scope. On an injector, it indicates that no
-   * scope is applied to the binding. An unscoped binding will behave like a scoped one when it is
-   * linked to a scoped binding.
+   * injector should use scoping annotations to find a scope. On an injector, it indicates that
+   * no scope is applied to the binding. An unscoped binding will behave like a scoped one when it
+   * is linked to a scoped binding.
    */
   V visitNoScoping();
 }

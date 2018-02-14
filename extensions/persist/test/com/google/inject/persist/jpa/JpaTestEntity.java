@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2010 Google, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,8 +26,7 @@ public class JpaTestEntity {
   private Long id;
   private String text;
 
-  @Id
-  @GeneratedValue
+  @Id @GeneratedValue
   public Long getId() {
     return id;
   }

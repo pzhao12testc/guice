@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2006 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,8 +19,9 @@ package com.google.inject;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.inject.internal.Messages;
+import com.google.inject.internal.Errors;
 import com.google.inject.spi.Message;
+
 import java.util.Collection;
 
 /**
@@ -37,7 +38,7 @@ public class CreationException extends RuntimeException {
   public CreationException(Collection<Message> messages) {
     this.messages = ImmutableSet.copyOf(messages);
     checkArgument(!this.messages.isEmpty());
-    initCause(Messages.getOnlyCause(this.messages));
+    initCause(Errors.getOnlyCause(this.messages));
   }
 
   /** Returns messages for the errors that caused this exception. */
@@ -45,9 +46,8 @@ public class CreationException extends RuntimeException {
     return messages;
   }
 
-  @Override
-  public String getMessage() {
-    return Messages.formatMessages("Unable to create injector, see the following errors", messages);
+  @Override public String getMessage() {
+    return Errors.format("Unable to create injector, see the following errors", messages);
   }
 
   private static final long serialVersionUID = 0;

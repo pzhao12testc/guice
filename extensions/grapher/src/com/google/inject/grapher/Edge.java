@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2011 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,8 +41,7 @@ public abstract class Edge {
     return toId;
   }
 
-  @Override
-  public boolean equals(Object obj) {
+  @Override public boolean equals(Object obj) {
     if (!(obj instanceof Edge)) {
       return false;
     }
@@ -50,8 +49,7 @@ public abstract class Edge {
     return Objects.equal(fromId, other.fromId) && Objects.equal(toId, other.toId);
   }
 
-  @Override
-  public int hashCode() {
+  @Override public int hashCode() {
     return Objects.hashCode(fromId, toId);
   }
 

@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2006 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +21,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.inject.Provider;
 import com.google.inject.spi.Dependency;
 
-/** @author crazybob@google.com (Bob Lee) */
+/**
+ * @author crazybob@google.com (Bob Lee)
+*/
 final class InternalFactoryToProviderAdapter<T> implements InternalFactory<T> {
 
   private final Provider<? extends T> provider;
@@ -32,22 +34,17 @@ final class InternalFactoryToProviderAdapter<T> implements InternalFactory<T> {
     this.source = checkNotNull(source, "source");
   }
 
-  @Override
-  public T get(InternalContext context, Dependency<?> dependency, boolean linked)
-      throws InternalProvisionException {
+  public T get(Errors errors, InternalContext context, Dependency<?> dependency, boolean linked)
+      throws ErrorsException {
+    // TODO(sameb): Does this need to push state into the context?
     try {
-      T t = provider.get();
-      if (t == null && !dependency.isNullable()) {
-        InternalProvisionException.onNullInjectedIntoNonNullableDependency(source, dependency);
-      }
-      return t;
+      return errors.checkForNull(provider.get(), source, dependency);
     } catch (RuntimeException userException) {
-      throw InternalProvisionException.errorInProvider(userException).addSource(source);
+      throw errors.withSource(source).errorInProvider(userException).toException();
     }
   }
 
-  @Override
-  public String toString() {
+  @Override public String toString() {
     return provider.toString();
   }
 }

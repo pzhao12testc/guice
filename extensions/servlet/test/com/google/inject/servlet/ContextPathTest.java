@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2011 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,7 +26,13 @@ import com.google.inject.Key;
 import com.google.inject.Scopes;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
+
+import junit.framework.TestCase;
+
+import org.easymock.IMocksControl;
+
 import java.io.IOException;
+
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletContext;
@@ -36,18 +42,14 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import junit.framework.TestCase;
-import org.easymock.IMocksControl;
 
 /** Tests to make sure that servlets with a context path are handled right. */
 public class ContextPathTest extends TestCase {
 
-  @Inject
-  @Named("foo")
+  @Inject @Named("foo")
   private TestServlet fooServlet;
 
-  @Inject
-  @Named("bar")
+  @Inject @Named("bar") 
   private TestServlet barServlet;
 
   private IMocksControl globalControl;
@@ -58,24 +60,18 @@ public class ContextPathTest extends TestCase {
 
   @Override
   public final void setUp() throws Exception {
-    injector =
-        Guice.createInjector(
-            new ServletModule() {
-              @Override
-              protected void configureServlets() {
-                bind(TestServlet.class)
-                    .annotatedWith(Names.named("foo"))
-                    .to(TestServlet.class)
-                    .in(Scopes.SINGLETON);
-                bind(TestServlet.class)
-                    .annotatedWith(Names.named("bar"))
-                    .to(TestServlet.class)
-                    .in(Scopes.SINGLETON);
-                serve("/foo/*").with(Key.get(TestServlet.class, Names.named("foo")));
-                serve("/bar/*").with(Key.get(TestServlet.class, Names.named("bar")));
-                // TODO: add a filter(..) call and validate it is correct
-              }
-            });
+    injector = Guice.createInjector(new ServletModule() {
+      @Override
+      protected void configureServlets() {
+        bind(TestServlet.class).annotatedWith(Names.named("foo"))
+            .to(TestServlet.class).in(Scopes.SINGLETON);
+        bind(TestServlet.class).annotatedWith(Names.named("bar"))
+            .to(TestServlet.class).in(Scopes.SINGLETON);
+        serve("/foo/*").with(Key.get(TestServlet.class, Names.named("foo")));
+        serve("/bar/*").with(Key.get(TestServlet.class, Names.named("bar")));
+        // TODO: add a filter(..) call and validate it is correct
+      }
+    });
     injector.injectMembers(this);
 
     assertNotNull(fooServlet);
@@ -87,8 +83,7 @@ public class ContextPathTest extends TestCase {
     filterConfig = globalControl.createMock(FilterConfig.class);
 
     expect(servletContext.getAttribute(GuiceServletContextListener.INJECTOR_NAME))
-        .andReturn(injector)
-        .anyTimes();
+        .andReturn(injector).anyTimes();
     expect(filterConfig.getServletContext()).andReturn(servletContext).anyTimes();
 
     globalControl.replay();
@@ -234,13 +229,8 @@ public class ContextPathTest extends TestCase {
     runTest("/webtest/xxx", "/xxx", "/webtest", true, false, false);
   }
 
-  private void runTest(
-      final String requestURI,
-      final String servletPath,
-      final String contextPath,
-      final boolean filterResult,
-      final boolean fooResult,
-      final boolean barResult)
+  private void runTest(final String requestURI, final String servletPath, final String contextPath,
+      final boolean filterResult, final boolean fooResult, final boolean barResult)
       throws Exception {
     IMocksControl testControl = createControl();
 
@@ -287,9 +277,8 @@ public class ContextPathTest extends TestCase {
   public static class TestFilterChain implements FilterChain {
     private boolean triggered = false;
 
-    @Override
-    public void doFilter(ServletRequest request, ServletResponse response)
-        throws IOException, ServletException {
+    public void doFilter(ServletRequest request, ServletResponse response) throws IOException,
+        ServletException {
       triggered = true;
     }
 

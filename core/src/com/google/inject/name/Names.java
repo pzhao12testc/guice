@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2006 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,7 @@ package com.google.inject.name;
 
 import com.google.inject.Binder;
 import com.google.inject.Key;
+
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.Properties;
@@ -31,12 +32,17 @@ public class Names {
 
   private Names() {}
 
-  /** Creates a {@link Named} annotation with {@code name} as the value. */
+  /**
+   * Creates a {@link Named} annotation with {@code name} as the value.
+   */
   public static Named named(String name) {
     return new NamedImpl(name);
   }
 
-  /** Creates a constant binding to {@code @Named(key)} for each entry in {@code properties}. */
+  /**
+   * Creates a constant binding to {@code @Named(key)} for each entry in
+   * {@code properties}.
+   */
   public static void bindProperties(Binder binder, Map<String, String> properties) {
     binder = binder.skipSources(Names.class);
     for (Map.Entry<String, String> entry : properties.entrySet()) {
@@ -47,8 +53,9 @@ public class Names {
   }
 
   /**
-   * Creates a constant binding to {@code @Named(key)} for each property. This method binds all
-   * properties including those inherited from {@link Properties#defaults defaults}.
+   * Creates a constant binding to {@code @Named(key)} for each property. This
+   * method binds all properties including those inherited from 
+   * {@link Properties#defaults defaults}.
    */
   public static void bindProperties(Binder binder, Properties properties) {
     binder = binder.skipSources(Names.class);

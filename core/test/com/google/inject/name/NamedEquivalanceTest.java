@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (C) 2010 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,16 +27,17 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.Provides;
-import com.google.inject.internal.Annotations;
+
+import junit.framework.TestCase;
+
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.util.Properties;
-import junit.framework.TestCase;
 
 /**
  * Tests that {@code javax.inject.Named} and {@code com.google.inject.name.Named} are completely
  * interchangeable: bindings for one can be used to inject the other.
- *
+ * 
  * @author cgdecker@gmail.com (Colin Decker)
  */
 public class NamedEquivalanceTest extends TestCase {
@@ -44,23 +45,21 @@ public class NamedEquivalanceTest extends TestCase {
   private static final Module GUICE_BINDING_MODULE = moduleWithAnnotation(Names.named("foo"));
   private static final Module JSR330_BINDING_MODULE = moduleWithAnnotation(new JsrNamed("foo"));
   private static final Module GUICE_PROVIDER_METHOD_MODULE = getGuiceBindingProviderMethodModule();
-  private static final Module JSR330_PROVIDER_METHOD_MODULE =
-      getJsr330BindingProviderMethodModule();
+  private static final Module JSR330_PROVIDER_METHOD_MODULE = getJsr330BindingProviderMethodModule();
 
   public void testKeysCreatedWithDifferentTypesAreEqual() {
     assertEquals(keyForAnnotation(new GuiceNamed("foo")), keyForAnnotation(new JsrNamed("foo")));
     assertEquals(keyForAnnotation(Names.named("foo")), keyForAnnotation(new GuiceNamed("foo")));
     assertEquals(keyForAnnotation(Names.named("foo")), keyForAnnotation(new JsrNamed("foo")));
 
-    assertEquals(
-        keyForAnnotationType(com.google.inject.name.Named.class),
+    assertEquals(keyForAnnotationType(com.google.inject.name.Named.class),
         keyForAnnotationType(javax.inject.Named.class));
   }
 
   private static Key<String> keyForAnnotation(Annotation annotation) {
     return Key.get(String.class, annotation);
   }
-
+  
   private static Key<String> keyForAnnotationType(Class<? extends Annotation> annotationType) {
     return Key.get(String.class, annotationType);
   }
@@ -105,15 +104,13 @@ public class NamedEquivalanceTest extends TestCase {
   }
 
   public void testBindPropertiesWorksWithJsr330() {
-    assertInjectionsSucceed(
-        new AbstractModule() {
-          @Override
-          protected void configure() {
-            Properties properties = new Properties();
-            properties.put("foo", "bar");
-            Names.bindProperties(binder(), properties);
-          }
-        });
+    assertInjectionsSucceed(new AbstractModule() {
+      @Override protected void configure() {
+        Properties properties = new Properties();
+        properties.put("foo", "bar");
+        Names.bindProperties(binder(), properties);
+      }
+    });
   }
 
   private static void assertMissingBindingErrorMessageUsesType(Class<?> clientType) {
@@ -121,28 +118,21 @@ public class NamedEquivalanceTest extends TestCase {
       Guice.createInjector().getInstance(clientType);
       fail("should have thrown ConfigurationException");
     } catch (ConfigurationException e) {
-      assertContains(
-          e.getMessage(),
-          "No implementation for java.lang.String annotated with "
-              + "@com.google.inject.name.Named(value="
-              + Annotations.memberValueString("foo")
-              + ") was bound.");
+      assertContains(e.getMessage(),
+          "No implementation for java.lang.String annotated with @com.google.inject.name.Named(value=foo) was bound.");
     }
   }
 
   private static void assertDuplicateBinding(Module a, Module b, boolean fails) {
     try {
       Guice.createInjector(a, b);
-      if (fails) {
+      if(fails) {
         fail("should have thrown CreationException");
       }
     } catch (CreationException e) {
-      if (fails) {
-        assertContains(
-            e.getMessage(),
-            "A binding to java.lang.String annotated with @com.google.inject.name.Named(value="
-                + Annotations.memberValueString("foo")
-                + ") was already configured");
+      if(fails) {
+        assertContains(e.getMessage(),
+            "A binding to java.lang.String annotated with @com.google.inject.name.Named(value=foo) was already configured");
       } else {
         throw e;
       }
@@ -151,8 +141,7 @@ public class NamedEquivalanceTest extends TestCase {
 
   private static Module moduleWithAnnotation(final Annotation annotation) {
     return new AbstractModule() {
-      @Override
-      protected void configure() {
+      @Override protected void configure() {
         bindConstant().annotatedWith(annotation).to("bar");
       }
     };
@@ -160,9 +149,8 @@ public class NamedEquivalanceTest extends TestCase {
 
   private static void assertInjectionsSucceed(Module module) {
     Injector injector = Guice.createInjector(module);
-    assertInjected(
-        injector.getInstance(GuiceNamedClient.class),
-        injector.getInstance(Jsr330NamedClient.class));
+    assertInjected(injector.getInstance(GuiceNamedClient.class), injector
+        .getInstance(Jsr330NamedClient.class));
   }
 
   private static void assertInjected(GuiceNamedClient guiceClient, Jsr330NamedClient jsr330Client) {
@@ -172,11 +160,8 @@ public class NamedEquivalanceTest extends TestCase {
 
   private static Module getJsr330BindingProviderMethodModule() {
     return new AbstractModule() {
-
-      @SuppressWarnings("unused")
-      @Provides
-      @javax.inject.Named("foo")
-      String provideFoo() {
+      @Override protected void configure() {}
+      @SuppressWarnings("unused") @Provides @javax.inject.Named("foo") String provideFoo() {
         return "bar";
       }
     };
@@ -184,26 +169,19 @@ public class NamedEquivalanceTest extends TestCase {
 
   private static Module getGuiceBindingProviderMethodModule() {
     return new AbstractModule() {
-
-      @SuppressWarnings("unused")
-      @Provides
-      @Named("foo")
-      String provideFoo() {
+      @Override protected void configure() {}
+      @SuppressWarnings("unused") @Provides @Named("foo") String provideFoo() {
         return "bar";
       }
     };
   }
 
   private static class GuiceNamedClient {
-    @Inject
-    @Named("foo")
-    String foo;
+    @Inject @Named("foo") String foo;
   }
 
   private static class Jsr330NamedClient {
-    @Inject
-    @javax.inject.Named("foo")
-    String foo;
+    @Inject @javax.inject.Named("foo") String foo;
   }
 
   private static class JsrNamed implements javax.inject.Named, Serializable {
@@ -213,18 +191,15 @@ public class NamedEquivalanceTest extends TestCase {
       this.value = value;
     }
 
-    @Override
     public String value() {
       return this.value;
     }
 
-    @Override
     public int hashCode() {
       // This is specified in java.lang.Annotation.
       return (127 * "value".hashCode()) ^ value.hashCode();
     }
 
-    @Override
     public boolean equals(Object o) {
       if (!(o instanceof javax.inject.Named)) {
         return false;
@@ -234,16 +209,10 @@ public class NamedEquivalanceTest extends TestCase {
       return value.equals(other.value());
     }
 
-    @Override
     public String toString() {
-      return "@"
-          + javax.inject.Named.class.getName()
-          + "(value="
-          + Annotations.memberValueString(value)
-          + ")";
+      return "@" + javax.inject.Named.class.getName() + "(value=" + value + ")";
     }
 
-    @Override
     public Class<? extends Annotation> annotationType() {
       return javax.inject.Named.class;
     }
@@ -253,23 +222,20 @@ public class NamedEquivalanceTest extends TestCase {
 
   private static class GuiceNamed implements com.google.inject.name.Named, Serializable {
     private final String value;
-
+    
     public GuiceNamed(String value) {
       this.value = value;
     }
-
-    @Override
+    
     public String value() {
       return this.value;
     }
-
-    @Override
+    
     public int hashCode() {
       // This is specified in java.lang.Annotation.
       return (127 * "value".hashCode()) ^ value.hashCode();
     }
 
-    @Override
     public boolean equals(Object o) {
       if (!(o instanceof com.google.inject.name.Named)) {
         return false;
@@ -279,16 +245,10 @@ public class NamedEquivalanceTest extends TestCase {
       return value.equals(other.value());
     }
 
-    @Override
     public String toString() {
-      return "@"
-          + com.google.inject.name.Named.class.getName()
-          + "(value="
-          + Annotations.memberValueString(value)
-          + ")";
+      return "@" + com.google.inject.name.Named.class.getName() + "(value=" + value + ")";
     }
 
-    @Override
     public Class<? extends Annotation> annotationType() {
       return com.google.inject.name.Named.class;
     }
